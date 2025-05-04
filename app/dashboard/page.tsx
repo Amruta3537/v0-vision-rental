@@ -42,13 +42,81 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { useAuth } from "@/contexts/auth-context"
 
-// Import at the top of the file
-// These would be your actual Firebase service functions in production
-const getAllRooms = async () => {
-  // Mock implementation for preview
-  return [
+interface RoomDetails {
+  id: number
+  title: string
+  rent: string
+  deposit: string
+  description: string
+  images: string[]
+  location: string
+  amenities: string[]
+  featured?: boolean
+  rating?: number
+  reviews?: number
+  owner?: string
+}
+
+// Sample amenities list
+const amenitiesList = [
+  "WiFi",
+  "Attached Bathroom",
+  "Furnished",
+  "AC",
+  "Kitchen Access",
+  "Parking",
+  "Balcony",
+  "TV",
+  "Washing Machine",
+  "Gym Access",
+  "Near Metro",
+  "Pets Allowed",
+]
+
+// Sample locations for filter
+const locations = [
+  "Downtown",
+  "North Side",
+  "South Side",
+  "East Side",
+  "West Side",
+  "Central",
+  "Suburban",
+  "University Area",
+]
+
+export default function Dashboard() {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [showModal, setShowModal] = useState(false)
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [favorites, setFavorites] = useState<number[]>([])
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string } | null>(null)
+  const [activeTab, setActiveTab] = useState("all")
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false)
+  const [roomToDelete, setRoomToDelete] = useState<number | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
+
+  const [roomDetails, setRoomDetails] = useState<RoomDetails>({
+    id: 0,
+    title: "",
+    rent: "",
+    deposit: "",
+    description: "",
+    images: [],
+    location: "",
+    amenities: [],
+  })
+
+  // Sample data for initial rooms
+  const [rooms, setRooms] = useState<RoomDetails[]>([
     {
       id: 1,
       title: "Luxury Studio Apartment",
@@ -97,207 +165,32 @@ const getAllRooms = async () => {
       reviews: 32,
       owner: "admin@example.com",
     },
-  ]
-}
-
-const getRoomsByOwner = async () => {
-  // Mock implementation for preview
-  return [
-    {
-      id: 1,
-      title: "Luxury Studio Apartment",
-      rent: "15000",
-      deposit: "30000",
-      description:
-        "Modern studio apartment with premium furnishings, high ceilings, and lots of natural light. Located in the heart of the city with easy access to public transportation.",
-      images: ["/placeholder.svg?height=400&width=600", "/placeholder.svg?height=400&width=600"],
-      location: "Downtown",
-      amenities: ["WiFi", "AC", "Furnished", "Attached Bathroom", "Kitchen Access"],
-      featured: true,
-      rating: 4.8,
-      reviews: 24,
-      owner: "admin@example.com",
-    },
-  ]
-}
-
-const getFavorites = async () => {
-  // Mock implementation for preview
-  return [
-    {
-      id: 2,
-      title: "Cozy Single Room in Shared Flat",
-      rent: "8000",
-      deposit: "16000",
-      description:
-        "Comfortable single room in a well-maintained shared apartment. All utilities included. Great for students or young professionals.",
-      images: ["/placeholder.svg?height=400&width=600"],
-      location: "University Area",
-      amenities: ["WiFi", "Furnished", "Kitchen Access", "Washing Machine"],
-      rating: 4.2,
-      reviews: 15,
-      owner: "john@example.com",
-    },
-  ]
-}
-
-const addRoom = async (roomDetails: any) => {
-  // Mock implementation for preview
-  console.log("Adding room:", roomDetails)
-  return { ...roomDetails, id: Date.now() }
-}
-
-const updateRoom = async (id: string, roomDetails: any) => {
-  // Mock implementation for preview
-  console.log("Updating room:", id, roomDetails)
-  return { ...roomDetails }
-}
-
-const deleteRoom = async (id: string) => {
-  // Mock implementation for preview
-  console.log("Deleting room:", id)
-  return true
-}
-
-const addFavorite = async (id: string) => {
-  // Mock implementation for preview
-  console.log("Adding favorite:", id)
-  return true
-}
-
-const removeFavorite = async (id: string) => {
-  // Mock implementation for preview
-  console.log("Removing favorite:", id)
-  return true
-}
-
-const uploadRoomImage = async (file: File) => {
-  // Mock implementation for preview
-  console.log("Uploading image:", file.name)
-  return "/placeholder.svg?height=400&width=600"
-}
-
-interface RoomDetails {
-  id: number
-  title: string
-  rent: string
-  deposit: string
-  description: string
-  images: string[]
-  location: string
-  amenities: string[]
-  featured?: boolean
-  rating?: number
-  reviews?: number
-  owner?: string
-}
-
-// Sample amenities list
-const amenitiesList = [
-  "WiFi",
-  "Attached Bathroom",
-  "Furnished",
-  "AC",
-  "Kitchen Access",
-  "Parking",
-  "Balcony",
-  "TV",
-  "Washing Machine",
-  "Gym Access",
-  "Near Metro",
-  "Pets Allowed",
-]
-
-// Sample locations for filter
-const locations = [
-  "Downtown",
-  "North Side",
-  "South Side",
-  "East Side",
-  "West Side",
-  "Central",
-  "Suburban",
-  "University Area",
-]
-
-export default function Dashboard() {
-  const router = useRouter()
-  const { toast } = useToast()
-  // Add isGuest to the destructured values
-  const { user, loading, signOut, isGuest } = useAuth()
-  const [showModal, setShowModal] = useState(false)
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [filterOpen, setFilterOpen] = useState(false)
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [favorites, setFavorites] = useState<number[]>([])
-  // Fix: Initialize isLoggedIn with a boolean value instead of itself
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string } | null>(null)
-  const [activeTab, setActiveTab] = useState("all")
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false)
-  const [roomToDelete, setRoomToDelete] = useState<number | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
-  const [loadingRoom, setLoadingRoom] = useState(false)
-
-  const [roomDetails, setRoomDetails] = useState<RoomDetails>({
-    id: 0,
-    title: "",
-    rent: "",
-    deposit: "",
-    description: "",
-    images: [],
-    location: "",
-    amenities: [],
-  })
-
-  // Sample data for initial rooms
-  const [rooms, setRooms] = useState<RoomDetails[]>([])
+  ])
 
   // Check if user is logged in
   useEffect(() => {
-    // Safe check for browser environment
-    if (typeof window === "undefined") return
-
-    try {
-      const savedUser = localStorage.getItem("currentUser")
-      if (!savedUser && !user) {
-        // If user is not logged in, redirect to login page
-        router.push("/login")
-        return
-      }
-
-      if (savedUser) {
-        setCurrentUser(JSON.parse(savedUser))
-        setIsLoggedIn(true)
-      } else if (user) {
-        // If we have a user from auth context but not in localStorage
-        const userInfo = {
-          name: user.displayName || "User",
-          email: user.email || "user@example.com",
-        }
-        setCurrentUser(userInfo)
-        setIsLoggedIn(true)
-        localStorage.setItem("currentUser", JSON.stringify(userInfo))
-      }
-
-      const savedFavorites = localStorage.getItem("favorites")
-      if (savedFavorites) {
-        setFavorites(JSON.parse(savedFavorites))
-      }
-
-      // Check if there's an active tab in localStorage
-      const storedTab = localStorage.getItem("activeTab")
-      if (storedTab) {
-        setActiveTab(storedTab)
-        localStorage.removeItem("activeTab")
-      }
-    } catch (error) {
-      console.error("Error checking user login status:", error)
+    const savedUser = localStorage.getItem("currentUser")
+    if (!savedUser) {
+      // If user is not logged in, redirect to login page
+      router.push("/login")
+      return
     }
-  }, [router, user])
+
+    setCurrentUser(JSON.parse(savedUser))
+    setIsLoggedIn(true)
+
+    const savedFavorites = localStorage.getItem("favorites")
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites))
+    }
+
+    // Check if there's an active tab in localStorage
+    const storedTab = localStorage.getItem("activeTab")
+    if (storedTab) {
+      setActiveTab(storedTab)
+      localStorage.removeItem("activeTab")
+    }
+  }, [router])
 
   // Auto-rotate images
   useEffect(() => {
@@ -310,28 +203,16 @@ export default function Dashboard() {
 
   // Check if dark mode is enabled
   useEffect(() => {
-    if (typeof window === "undefined") return
-
-    try {
-      const isDark = document.documentElement.classList.contains("dark")
-      setDarkMode(isDark)
-    } catch (error) {
-      console.error("Error checking dark mode:", error)
-    }
+    const isDark = document.documentElement.classList.contains("dark")
+    setDarkMode(isDark)
   }, [])
 
   // Toggle dark mode
   useEffect(() => {
-    if (typeof window === "undefined") return
-
-    try {
-      if (darkMode) {
-        document.documentElement.classList.add("dark")
-      } else {
-        document.documentElement.classList.remove("dark")
-      }
-    } catch (error) {
-      console.error("Error toggling dark mode:", error)
+    if (darkMode) {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
     }
   }, [darkMode])
 
@@ -339,40 +220,14 @@ export default function Dashboard() {
     setRoomDetails({ ...roomDetails, [e.target.name]: e.target.value })
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return
 
-    try {
-      const files = Array.from(e.target.files)
-      const uploadPromises = files.map((file) => uploadRoomImage(file))
-
-      // Show loading toast
-      toast({
-        title: "Uploading Images",
-        description: "Please wait while your images are being uploaded...",
-        variant: "default",
-      })
-
-      const uploadedUrls = await Promise.all(uploadPromises)
-
-      setRoomDetails({
-        ...roomDetails,
-        images: [...roomDetails.images, ...uploadedUrls],
-      })
-
-      toast({
-        title: "Images Uploaded",
-        description: `Successfully uploaded ${files.length} image(s)`,
-        variant: "default",
-      })
-    } catch (error) {
-      console.error("Error uploading images:", error)
-      toast({
-        title: "Upload Failed",
-        description: "Failed to upload images. Please try again.",
-        variant: "destructive",
-      })
-    }
+    const files = Array.from(e.target.files)
+    setRoomDetails({
+      ...roomDetails,
+      images: files.map((file) => URL.createObjectURL(file)),
+    })
   }
 
   const toggleAmenity = (amenity: string) => {
@@ -389,50 +244,7 @@ export default function Dashboard() {
     }
   }
 
-  // Load rooms based on active tab
-  useEffect(() => {
-    const loadRooms = async () => {
-      setLoadingRoom(true)
-      try {
-        let roomsData = []
-
-        if (activeTab === "my-listings") {
-          roomsData = await getRoomsByOwner()
-        } else if (activeTab === "favorites") {
-          roomsData = await getFavorites()
-        } else {
-          roomsData = await getAllRooms()
-        }
-
-        setRooms(roomsData)
-      } catch (error) {
-        console.error("Error loading rooms:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load rooms. Please try again.",
-          variant: "destructive",
-        })
-      } finally {
-        setLoadingRoom(false)
-      }
-    }
-
-    if (isLoggedIn) {
-      loadRooms()
-    }
-  }, [activeTab, isLoggedIn, toast])
-
-  const handleAddRoom = async () => {
-    // Check if user is a guest before allowing them to add a room
-    if (isGuest) {
-      toast({
-        title: "Guest Account Limitation",
-        description: "Please create an account to add rooms. Guest users can only browse listings.",
-        variant: "destructive",
-      })
-      return
-    }
-
+  const handleAddRoom = () => {
     if (!roomDetails.title || !roomDetails.rent || !roomDetails.deposit || !roomDetails.location) {
       toast({
         title: "Missing Information",
@@ -442,45 +254,37 @@ export default function Dashboard() {
       return
     }
 
-    try {
-      if (isEditing) {
-        // Update existing room
-        await updateRoom(roomDetails.id.toString(), roomDetails)
-        toast({
-          title: "Room Updated",
-          description: "Your room has been successfully updated",
-          variant: "default",
-        })
-      } else {
-        // Add new room
-        await addRoom(roomDetails)
-        toast({
-          title: "Room Added",
-          description: "Your room has been successfully listed",
-          variant: "default",
-        })
-      }
-
-      // Reload rooms
-      if (activeTab === "my-listings") {
-        const updatedRooms = await getRoomsByOwner()
-        setRooms(updatedRooms)
-      } else {
-        const updatedRooms = await getAllRooms()
-        setRooms(updatedRooms)
-      }
-
-      resetForm()
-      setShowModal(false)
-      setIsEditing(false)
-    } catch (error) {
-      console.error("Error adding/updating room:", error)
+    if (isEditing) {
+      // Update existing room
+      const updatedRooms = rooms.map((room) =>
+        room.id === roomDetails.id ? { ...roomDetails, owner: currentUser?.email || "" } : room,
+      )
+      setRooms(updatedRooms)
       toast({
-        title: "Error",
-        description: "Failed to save room. Please try again.",
-        variant: "destructive",
+        title: "Room Updated",
+        description: "Your room has been successfully updated",
+        variant: "default",
+      })
+    } else {
+      // Add new room
+      const newRoom = {
+        ...roomDetails,
+        id: Date.now(),
+        rating: 5.0,
+        reviews: 0,
+        owner: currentUser?.email || "",
+      }
+      setRooms([newRoom, ...rooms])
+      toast({
+        title: "Room Added",
+        description: "Your room has been successfully listed",
+        variant: "default",
       })
     }
+
+    resetForm()
+    setShowModal(false)
+    setIsEditing(false)
   }
 
   const resetForm = () => {
@@ -507,102 +311,53 @@ export default function Dashboard() {
     setShowDeleteAlert(true)
   }
 
-  const confirmDeleteRoom = async () => {
+  const confirmDeleteRoom = () => {
     if (roomToDelete) {
-      try {
-        await deleteRoom(roomToDelete.toString())
-
-        // Update local state
-        setRooms(rooms.filter((room) => room.id !== roomToDelete))
-
-        toast({
-          title: "Room Deleted",
-          description: "Your room has been successfully removed",
-          variant: "default",
-        })
-      } catch (error) {
-        console.error("Error deleting room:", error)
-        toast({
-          title: "Error",
-          description: "Failed to delete room. Please try again.",
-          variant: "destructive",
-        })
-      } finally {
-        setShowDeleteAlert(false)
-        setRoomToDelete(null)
-      }
+      setRooms(rooms.filter((room) => room.id !== roomToDelete))
+      toast({
+        title: "Room Deleted",
+        description: "Your room has been successfully removed",
+        variant: "default",
+      })
+      setShowDeleteAlert(false)
+      setRoomToDelete(null)
     }
   }
 
-  const toggleFavorite = async (id: number) => {
-    // Check if user is a guest
-    if (isGuest) {
+  const toggleFavorite = (id: number) => {
+    let newFavorites: number[]
+    if (favorites.includes(id)) {
+      newFavorites = favorites.filter((fav) => fav !== id)
       toast({
-        title: "Guest Account Limitation",
-        description: "Please create an account to save favorites. Guest users can only browse listings.",
-        variant: "destructive",
+        title: "Removed from favorites",
+        description: "Room has been removed from your favorites",
+        variant: "default",
       })
-      return
-    }
-
-    try {
-      if (favorites.includes(id)) {
-        await removeFavorite(id.toString())
-        setFavorites(favorites.filter((fav) => fav !== id))
-        toast({
-          title: "Removed from favorites",
-          description: "Room has been removed from your favorites",
-          variant: "default",
-        })
-      } else {
-        await addFavorite(id.toString())
-        setFavorites([...favorites, id])
-        toast({
-          title: "Added to favorites",
-          description: "Room has been added to your favorites",
-          variant: "default",
-        })
-      }
-
-      // Update localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("favorites", JSON.stringify(favorites))
-      }
-    } catch (error) {
-      console.error("Error updating favorites:", error)
+    } else {
+      newFavorites = [...favorites, id]
       toast({
-        title: "Error",
-        description: "Failed to update favorites. Please try again.",
-        variant: "destructive",
+        title: "Added to favorites",
+        description: "Room has been added to your favorites",
+        variant: "default",
       })
     }
+
+    setFavorites(newFavorites)
+    localStorage.setItem("favorites", JSON.stringify(newFavorites))
   }
 
   const handleLogout = () => {
-    try {
-      signOut()
-      setCurrentUser(null)
-      setIsLoggedIn(false)
+    setCurrentUser(null)
+    setIsLoggedIn(false)
+    localStorage.removeItem("currentUser")
 
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("currentUser")
-      }
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out",
+      variant: "default",
+    })
 
-      toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out",
-        variant: "default",
-      })
-
-      router.push("/")
-    } catch (error) {
-      console.error("Error logging out:", error)
-      toast({
-        title: "Error",
-        description: "Failed to log out. Please try again.",
-        variant: "destructive",
-      })
-    }
+    router.push("/")
   }
 
   const filteredRooms = rooms.filter((room) => {
@@ -657,52 +412,6 @@ export default function Dashboard() {
     })
   }
 
-  // Render a banner for guest users
-  const renderGuestBanner = () => {
-    if (isGuest) {
-      return (
-        <div className="bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg p-4 mb-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-amber-800 dark:text-amber-300">Guest Mode</h3>
-              <div className="mt-1 text-sm text-amber-700 dark:text-amber-400">
-                <p>
-                  You are browsing as a guest. To add listings or save favorites, please{" "}
-                  <button onClick={() => router.push("/login")} className="underline font-medium">
-                    create an account
-                  </button>
-                  .
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-    return null
-  }
-
-  // If still loading, show a loading indicator
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className={`min-h-screen ${darkMode ? "dark bg-gray-900" : "bg-gray-50"}`}>
       {/* Navbar */}
@@ -740,9 +449,9 @@ export default function Dashboard() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="text-white flex items-center hover:bg-white/10">
                   <Avatar className="w-5 h-5 mr-1">
-                    <AvatarFallback>{currentUser?.name?.charAt(0) || "U"}</AvatarFallback>
+                    <AvatarFallback>{currentUser?.name.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:inline">{currentUser?.name || "User"}</span>
+                  <span className="hidden sm:inline">{currentUser?.name}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -800,15 +509,6 @@ export default function Dashboard() {
         <Button
           className="bg-rose-700 hover:bg-rose-800 text-white flex items-center shadow-xl w-full sm:w-auto"
           onClick={() => {
-            // Check if user is a guest before showing the modal
-            if (isGuest) {
-              toast({
-                title: "Guest Account Limitation",
-                description: "Please create an account to add rooms. Guest users can only browse listings.",
-                variant: "destructive",
-              })
-              return
-            }
             resetForm()
             setIsEditing(false)
             setShowModal(true)
@@ -820,8 +520,6 @@ export default function Dashboard() {
 
       {/* Dashboard Controls */}
       <div className="container mx-auto mt-8 px-4">
-        {/* Render guest banner */}
-        {renderGuestBanner()}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -974,16 +672,7 @@ export default function Dashboard() {
 
       {/* Listings */}
       <div className="container mx-auto px-4 pb-16">
-        {loadingRoom ? (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center text-gray-500 dark:text-gray-400 text-xl mt-10 py-16"
-          >
-            <p className="italic">Loading rooms...</p>
-          </motion.div>
-        ) : filteredRooms.length === 0 ? (
+        {filteredRooms.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1536,3 +1225,4 @@ export default function Dashboard() {
     </div>
   )
 }
+

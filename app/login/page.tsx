@@ -8,21 +8,16 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Building, ArrowRight, Eye, EyeOff, Moon, Sun } from "lucide-react"
+import { Building, ArrowRight, Eye, EyeOff } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/contexts/auth-context"
-import { useTheme } from "next-themes"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  // Add signInAsGuest to the destructured values
-  const { user, loading, signIn, signUp, signInAsGuest } = useAuth()
   const [isRegistering, setIsRegistering] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const { theme, setTheme } = useTheme()
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" })
   const [registerForm, setRegisterForm] = useState({
@@ -34,25 +29,18 @@ export default function LoginPage() {
 
   // Check if user is already logged in
   useEffect(() => {
-    // Safely check if user exists and router is available
-    if (!loading && user && router) {
+    const savedUser = localStorage.getItem("currentUser")
+    if (savedUser) {
       // If user is already logged in, redirect to dashboard
       router.push("/dashboard")
     }
 
     // Check if register param is present
-    const register = searchParams?.get("register")
+    const register = searchParams.get("register")
     if (register === "true") {
       setIsRegistering(true)
     }
-
-    setMounted(true)
-  }, [router, searchParams, user, loading])
-
-  // Avoid hydration mismatch
-  if (!mounted) {
-    return null
-  }
+  }, [router, searchParams])
 
   const handleLoginInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLoginForm({ ...loginForm, [e.target.name]: e.target.value })
@@ -62,59 +50,36 @@ export default function LoginPage() {
     setRegisterForm({ ...registerForm, [e.target.name]: e.target.value })
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
 
-    try {
-      await signIn(loginForm.email, loginForm.password)
+    // Simple mock login - in a real app, this would be an API call
+    if (loginForm.email && loginForm.password) {
+      const user = {
+        name: loginForm.email.split("@")[0],
+        email: loginForm.email,
+      }
+
+      localStorage.setItem("currentUser", JSON.stringify(user))
+
       toast({
         title: "Login Successful",
-        description: "Welcome back!",
+        description: `Welcome back, ${user.name}!`,
         variant: "default",
       })
 
-      // Use a more reliable way to navigate
-      if (typeof window !== "undefined") {
-        window.location.href = "/dashboard"
-      } else {
-        router.push("/dashboard")
-      }
-    } catch (error: any) {
+      // Redirect to dashboard
+      router.push("/dashboard")
+    } else {
       toast({
         title: "Login Failed",
-        description: error.message || "Please check your credentials",
+        description: "Please enter valid credentials",
         variant: "destructive",
       })
     }
   }
 
-  // Handle guest login
-  const handleGuestLogin = async () => {
-    try {
-      await signInAsGuest()
-      toast({
-        title: "Guest Login Successful",
-        description: "You are now logged in as a guest user",
-        variant: "default",
-      })
-
-      // Use a more reliable way to navigate
-      if (typeof window !== "undefined") {
-        window.location.href = "/dashboard"
-      } else {
-        router.push("/dashboard")
-      }
-    } catch (error: any) {
-      console.error("Guest login error:", error)
-      toast({
-        title: "Guest Login Failed",
-        description: error.message || "Failed to login as guest",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault()
 
     // Simple validation
@@ -136,27 +101,22 @@ export default function LoginPage() {
       return
     }
 
-    try {
-      await signUp(registerForm.email, registerForm.password, registerForm.name)
-      toast({
-        title: "Registration Successful",
-        description: `Welcome, ${registerForm.name}!`,
-        variant: "default",
-      })
-
-      // Use a more reliable way to navigate
-      if (typeof window !== "undefined") {
-        window.location.href = "/dashboard"
-      } else {
-        router.push("/dashboard")
-      }
-    } catch (error: any) {
-      toast({
-        title: "Registration Failed",
-        description: error.message || "An error occurred during registration",
-        variant: "destructive",
-      })
+    // Simple mock registration - in a real app, this would be an API call
+    const user = {
+      name: registerForm.name,
+      email: registerForm.email,
     }
+
+    localStorage.setItem("currentUser", JSON.stringify(user))
+
+    toast({
+      title: "Registration Successful",
+      description: `Welcome, ${user.name}!`,
+      variant: "default",
+    })
+
+    // Redirect to dashboard
+    router.push("/dashboard")
   }
 
   return (
@@ -164,28 +124,11 @@ export default function LoginPage() {
       <div className="bg-gradient-to-r from-amber-800 to-rose-900 dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col">
         {/* Header */}
         <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-          <div
-            className="flex items-center cursor-pointer"
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                window.location.href = "/"
-              } else {
-                router.push("/")
-              }
-            }}
-          >
+          <div className="flex items-center cursor-pointer" onClick={() => router.push("/")}>
             <Building className="h-8 w-8 text-amber-400 mr-2" />
             <h1 className="text-2xl font-bold text-white">Premium Room Finder</h1>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="text-white hover:bg-white/10"
-          >
-            {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
-            <span className="sr-only">Toggle theme</span>
-          </Button>
+          <ThemeToggle />
         </div>
 
         {/* Main Content */}
@@ -355,11 +298,6 @@ export default function LoginPage() {
                       Sign In <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
 
-                    {/* Guest Login Button */}
-                    <Button type="button" variant="outline" className="w-full mt-2" onClick={handleGuestLogin}>
-                      Continue as Guest
-                    </Button>
-
                     <div className="text-center mt-4">
                       <p className="text-gray-600 dark:text-gray-400">
                         Don't have an account?{" "}
@@ -393,12 +331,22 @@ export default function LoginPage() {
                       type="button"
                       className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
                     >
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          fillRule="evenodd"
+                          d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
                       <span className="ml-2">Facebook</span>
                     </button>
                     <button
                       type="button"
                       className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
                     >
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+                      </svg>
                       <span className="ml-2">Google</span>
                     </button>
                   </div>
@@ -411,3 +359,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

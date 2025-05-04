@@ -41,15 +41,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { useAuth } from "@/contexts/auth-context"
-
-// Import at the top of the file
-import {
-  getRoomById,
-  addFavorite as addFavoriteService,
-  removeFavorite as removeFavoriteService,
-  deleteRoom as deleteRoomService,
-} from "@/lib/room-service"
 
 interface RoomDetails {
   id: number
@@ -84,9 +75,8 @@ export default function RoomDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
-  const { user, loading, isGuest } = useAuth()
   const [room, setRoom] = useState<RoomDetails | null>(null)
-  const [loadingRoom, setLoadingRoom] = useState(true)
+  const [loading, setLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isFavorite, setIsFavorite] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
@@ -101,31 +91,6 @@ export default function RoomDetailPage() {
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string } | null>(null)
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
   const [favorites, setFavorites] = useState<number[]>([])
-
-  // Mock functions for adding and removing favorites (replace with your actual logic)
-  const addFavorite = async (roomId: number) => {
-    // Simulate adding to favorites
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const updatedFavorites = [...favorites, roomId]
-        setFavorites(updatedFavorites)
-        localStorage.setItem("favorites", JSON.stringify(updatedFavorites))
-        resolve(true)
-      }, 500)
-    })
-  }
-
-  const removeFavorite = async (roomId: number) => {
-    // Simulate removing from favorites
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const updatedFavorites = favorites.filter((favId) => favId !== roomId)
-        setFavorites(updatedFavorites)
-        localStorage.setItem("favorites", JSON.stringify(updatedFavorites))
-        resolve(true)
-      }, 500)
-    })
-  }
 
   // Check if dark mode is enabled
   useEffect(() => {
@@ -165,103 +130,145 @@ export default function RoomDetailPage() {
     }
   }, [params.id, router])
 
-  // Then replace the useEffect:
   // Fetch room data
   useEffect(() => {
-    const loadRoom = async () => {
-      setLoadingRoom(true)
-      try {
-        const roomData = await getRoomById(params.id as string)
-        setRoom(roomData)
+    // Simulate API call
+    setLoading(true)
 
-        // Check if room is in favorites
-        const savedFavorites = localStorage.getItem("favorites")
-        if (savedFavorites) {
-          const favs = JSON.parse(savedFavorites)
-          setIsFavorite(favs.includes(roomData.id))
-        }
-      } catch (error) {
-        console.error("Error loading room:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load room details. Please try again.",
-          variant: "destructive",
-        })
-      } finally {
-        setLoadingRoom(false)
+    setTimeout(() => {
+      // This would be a real API call in production
+      // For now, we'll use the ID from the URL to simulate fetching the specific room
+      const id = Number(params.id)
+
+      // Sample data - in a real app, this would come from your API
+      const roomData: RoomDetails = {
+        id: id,
+        title:
+          id === 1
+            ? "Luxury Studio Apartment"
+            : id === 2
+              ? "Cozy Single Room in Shared Flat"
+              : id === 3
+                ? "Spacious 2BHK with Balcony"
+                : `Room #${id}`,
+        rent: id === 1 ? "15000" : id === 2 ? "8000" : id === 3 ? "22000" : "12000",
+        deposit: id === 1 ? "30000" : id === 2 ? "16000" : id === 3 ? "44000" : "24000",
+        description:
+          id === 1
+            ? "Modern studio apartment with premium furnishings, high ceilings, and lots of natural light. Located in the heart of the city with easy access to public transportation. The apartment features a fully equipped kitchen, a comfortable living area, and a spacious bathroom. All utilities are included in the rent, and the building has 24/7 security. Perfect for young professionals or students looking for a convenient and comfortable living space."
+            : "This comfortable and well-maintained room is perfect for anyone looking for a convenient and affordable living space. The property is located in a quiet neighborhood with easy access to public transportation, shopping centers, and restaurants.",
+        images: [
+          "/placeholder.svg?height=600&width=800",
+          "/placeholder.svg?height=600&width=800",
+          "/placeholder.svg?height=600&width=800",
+          "/placeholder.svg?height=600&width=800",
+        ],
+        location: id === 1 ? "Downtown" : id === 2 ? "University Area" : id === 3 ? "East Side" : "Central",
+        amenities:
+          id === 1
+            ? [
+                "WiFi",
+                "AC",
+                "Furnished",
+                "Attached Bathroom",
+                "Kitchen Access",
+                "Parking",
+                "Balcony",
+                "TV",
+                "Washing Machine",
+                "Gym Access",
+              ]
+            : ["WiFi", "Furnished", "Kitchen Access", "Washing Machine"],
+        featured: id === 1 || id === 3,
+        rating: id === 1 ? 4.8 : id === 2 ? 4.2 : id === 3 ? 4.9 : 4.5,
+        reviews: id === 1 ? 24 : id === 2 ? 15 : id === 3 ? 32 : 10,
+        owner: id === 1 || id === 3 ? "admin@example.com" : "john@example.com",
+        ownerDetails: {
+          name: "John Doe",
+          image: "/placeholder.svg?height=100&width=100",
+          responseRate: 95,
+          responseTime: "within a few hours",
+        },
+        reviewsList: [
+          {
+            id: 1,
+            user: "Sarah Johnson",
+            avatar: "/placeholder.svg?height=50&width=50",
+            rating: 5,
+            date: "2 weeks ago",
+            comment:
+              "This place is absolutely amazing! The location is perfect, and the amenities are top-notch. I would definitely recommend it to anyone looking for a comfortable stay.",
+          },
+          {
+            id: 2,
+            user: "Michael Brown",
+            avatar: "/placeholder.svg?height=50&width=50",
+            rating: 4,
+            date: "1 month ago",
+            comment:
+              "Great place overall. The room was clean and well-maintained. The only issue was that the WiFi was a bit slow at times, but everything else was perfect.",
+          },
+          {
+            id: 3,
+            user: "Emily Davis",
+            avatar: "/placeholder.svg?height=50&width=50",
+            rating: 5,
+            date: "2 months ago",
+            comment:
+              "I had a wonderful stay here. The host was very responsive and accommodating. The room was spacious and had all the amenities I needed. Would definitely stay here again!",
+          },
+        ],
       }
-    }
 
-    if (params.id) {
-      loadRoom()
-    }
-  }, [params.id, toast])
+      setRoom(roomData)
+      setLoading(false)
+    }, 1000)
+  }, [params.id])
 
-  // Then replace the toggleFavorite function:
-  const toggleFavorite = async () => {
-    if (!room?.id) return
+  const handlePrevImage = () => {
+    if (!room) return
+    setCurrentImageIndex((prev) => (prev === 0 ? room.images.length - 1 : prev - 1))
+  }
 
-    // Check if user is a guest before allowing them to add favorites
-    if (isGuest) {
+  const handleNextImage = () => {
+    if (!room) return
+    setCurrentImageIndex((prev) => (prev === room.images.length - 1 ? 0 : prev + 1))
+  }
+
+  const toggleFavorite = () => {
+    let newFavorites: number[]
+    if (isFavorite) {
+      newFavorites = favorites.filter((fav) => fav !== room?.id)
       toast({
-        title: "Guest Account Limitation",
-        description: "Please create an account to save favorites. Guest users can only browse listings.",
-        variant: "destructive",
+        title: "Removed from favorites",
+        description: "Room has been removed from your favorites",
+        variant: "default",
       })
-      return
-    }
-
-    try {
-      if (isFavorite) {
-        await removeFavoriteService(room.id.toString())
-        setIsFavorite(false)
-        toast({
-          title: "Removed from favorites",
-          description: "Room has been removed from your favorites",
-          variant: "default",
-        })
-      } else {
-        await addFavoriteService(room.id.toString())
-        setIsFavorite(true)
-        toast({
-          title: "Added to favorites",
-          description: "Room has been added to your favorites",
-          variant: "default",
-        })
-      }
-    } catch (error: any) {
+    } else {
+      newFavorites = [...favorites, room?.id || 0]
       toast({
-        title: "Error",
-        description: error.message || "Failed to update favorites",
-        variant: "destructive",
+        title: "Added to favorites",
+        description: "Room has been added to your favorites",
+        variant: "default",
       })
     }
+
+    setFavorites(newFavorites)
+    setIsFavorite(!isFavorite)
+    localStorage.setItem("favorites", JSON.stringify(newFavorites))
   }
 
   const handleDeleteRoom = () => {
     setShowDeleteAlert(true)
   }
 
-  // Then replace the confirmDeleteRoom function:
-  const confirmDeleteRoom = async () => {
-    if (!room?.id) return
-
-    try {
-      await deleteRoomService(room.id.toString())
-      toast({
-        title: "Room Deleted",
-        description: "Your room has been successfully removed",
-        variant: "default",
-      })
-      router.push("/dashboard")
-    } catch (error) {
-      console.error("Error deleting room:", error)
-      toast({
-        title: "Error",
-        description: "Failed to delete room. Please try again.",
-        variant: "destructive",
-      })
-    }
+  const confirmDeleteRoom = () => {
+    toast({
+      title: "Room Deleted",
+      description: "Your room has been successfully removed",
+      variant: "default",
+    })
+    router.push("/dashboard")
   }
 
   const handleEditRoom = () => {
@@ -279,17 +286,6 @@ export default function RoomDetailPage() {
 
   const handleInquirySubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Check if user is a guest before allowing them to submit an inquiry
-    if (isGuest) {
-      toast({
-        title: "Guest Account Limitation",
-        description: "Please create an account to contact owners. Guest users can only browse listings.",
-        variant: "destructive",
-      })
-      return
-    }
-
     toast({
       title: "Inquiry Sent",
       description: "Your inquiry has been sent to the owner. They will contact you soon.",
@@ -314,15 +310,7 @@ export default function RoomDetailPage() {
     })
   }
 
-  const handlePrevImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : room.images.length - 1))
-  }
-
-  const handleNextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex < room.images.length - 1 ? prevIndex + 1 : 0))
-  }
-
-  if (loading || loadingRoom) {
+  if (loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${darkMode ? "dark bg-gray-900" : "bg-gray-50"}`}>
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-600"></div>
@@ -569,10 +557,7 @@ export default function RoomDetailPage() {
                     {room.ownerDetails && (
                       <div className="flex items-center">
                         <Avatar className="h-12 w-12">
-                          <AvatarImage
-                            src={room.ownerDetails.image || "/placeholder.svg"}
-                            alt={room.ownerDetails.name}
-                          />
+                          <AvatarImage src={room.ownerDetails.image} alt={room.ownerDetails.name} />
                           <AvatarFallback>{room.ownerDetails.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div className="ml-4">
@@ -626,7 +611,7 @@ export default function RoomDetailPage() {
                           <div className="flex justify-between items-start">
                             <div className="flex items-center">
                               <Avatar className="h-10 w-10">
-                                <AvatarImage src={review.avatar || "/placeholder.svg"} alt={review.user} />
+                                <AvatarImage src={review.avatar} alt={review.user} />
                                 <AvatarFallback>{review.user.charAt(0)}</AvatarFallback>
                               </Avatar>
                               <div className="ml-3">
@@ -824,3 +809,4 @@ export default function RoomDetailPage() {
     </div>
   )
 }
+
